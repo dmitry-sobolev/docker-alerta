@@ -1,11 +1,10 @@
-version: '2.1'
+version: '3.2'
 services:
   web:
     # build: .
-    image: alerta/alerta-web
+    image: test-aa
     volumes:
       - $PWD/config/alertad.conf.example:/etc/alertad.conf
-      - $PWD/config/config.js.example:/app/config.js
     ports:
       - "8181:80"
     depends_on:

@@ -1,47 +1,71 @@
+FROM alpine:latest
+LABEL maintainer="Dmitry Sobolev <ds@napoleonit.ru>"
 
-FROM ubuntu:latest
-MAINTAINER Nick Satterly <nick.satterly@theguardian.com>
+RUN addgroup -S alerta && adduser -S -G alerta alerta
 
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    cron \
-    git \
-    libffi-dev \
-    mongodb-clients \
+ARG APP_ROOT=/opt/app
+
+RUN set -ex; \
+  \
+  apk add --no-cache --virtual .run-deps \
+    bash \
+    coreutils \
     nginx \
     python \
-    python-dev \
-    python-pip \
-    python-setuptools \
-    wget
+    git \
+    py-pip \
+    py-setuptools \
+    uwsgi-python \
+    supervisor; \
+  apk add --no-cache --virtual .build-dep \
+    musl-dev \
+    gcc \
+    make \
+    libffi-dev \
+    python-dev; \
+  pip install --no-cache-dir alerta-server alerta; \
+  \
+  apk del .build-dep && rm -rf /var/cache/apk/*
 
-RUN set -x && \
-  pip install pip --upgrade && \
-  pip install uwsgi supervisor alerta-server alerta
+RUN set -ex; \
+  \
+  apk add --no-cache --virtual .fetch-deps \
+    ca-certificates \
+    openssl; \
+  wget -q -O - https://github.com/alerta/angular-alerta-webui/tarball/master | tar zxf -; \
+  \
+  mkdir -p $APP_ROOT; \
+  mv alerta-angular-alerta-webui-*/app /opt; \
+  rm -Rf /alerta-angular-alerta-webui-*; \
+  mv $APP_ROOT/config.js $APP_ROOT/config.js.orig; \
+  \
+  apk del .fetch-deps && rm -rf /var/cache/apk/*;
 
-RUN wget -q -O - https://github.com/alerta/angular-alerta-webui/tarball/master | tar zxf -
-RUN set -x && \
-  mv alerta-angular-alerta-webui-*/app /app && \
-  rm -Rf /alerta-angular-alerta-webui-* && \
-  mv /app/config.js /app/config.js.orig
-
-ENV ALERTA_SVR_CONF_FILE /etc/alertad.conf
-ENV ALERTA_WEB_CONF_FILE /app/config.js
-ENV ALERTA_CONF_FILE /root/alerta.conf
+ENV ALERTA_SVR_CONF_FILE /etc/alerta/alertad.conf
+ENV ALERTA_WEB_CONF_FILE $APP_ROOT/config.js
+ENV ALERTA_CONF_FILE /etc/alerta/alerta.conf
 
 ENV BASE_URL /api
 ENV PROVIDER basic
 ENV CLIENT_ID not-set
 ENV CLIENT_SECRET not-set
 
-RUN echo "from alerta.app import app" >/wsgi.py
-ADD uwsgi.ini /uwsgi.ini
-ADD nginx.conf /nginx.conf
-ADD housekeepingAlerts.js /housekeepingAlerts.js
-ADD supervisord.conf /etc/supervisord.conf
+COPY configs/uwsgi.ini /etc/alerta/uwsgi.ini
+COPY configs/web_config.js $APP_ROOT/config.js
+COPY configs/nginx.conf /etc/nginx/nginx.conf
+COPY configs/supervisor.d/* /etc/supervisor.d/
+
+COPY scripts/* /usr/local/bin/
+
+RUN set -ex; \
+  \
+  mkdir -p /etc/alerta; \
+  echo "from alerta.app import app" > /etc/alerta/wsgi.py; \
+  chmod +x /usr/local/bin/docker-entrypoint.sh; \
+  chmod +x /usr/local/bin/insert_cron_key.py; \
+  chmod +x /usr/local/bin/housekeeping_alerts.py; \
+  chmod +x /usr/local/bin/supervisor_killer
 
 EXPOSE 80
 
-COPY docker-entrypoint.sh /
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["supervisord", "-c", "/etc/supervisord.conf"]
+ENTRYPOINT ["docker-entrypoint.sh"]
