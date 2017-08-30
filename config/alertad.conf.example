@@ -1,8 +1,0 @@
-DEBUG = True
-SECRET = "f1ef432b-b8eb-4c5f-a24b-47f74da5efdb"
-AUTH_REQUIRED = True
-MONGO_URI = 'mongodb://db:27017/monitoring'
-
-PLUGINS = ['geoip', 'normalise']
-GEOIP_URL = 'http://ip-api.com/json'
-DASHBOARD_URL = 'http://try.alerta.io'

@@ -34,7 +34,7 @@ The following environment variables are supported for configuring
 the `alerta-web` container:
 
 `DEBUG`
-    - debug mode. Set to ``True`` for increased logging.
+    - debug mode.
 
 `BASE_URL`
     - used to fix relative links. (default: `/api`)
@@ -47,6 +47,9 @@ the `alerta-web` container:
 
 `AUTH_REQUIRED`
     - require users to authenticate when using web UI or `alerta` CLI.
+
+`AUTH_PROVIDER`
+    - authentication provider (default: `basic`)
 
 `ADMIN_USERS`
     - list of logins that should be granted "admin" role.

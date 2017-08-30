@@ -3,8 +3,6 @@ services:
   web:
     # build: .
     image: test-aa
-    volumes:
-      - $PWD/config/alertad.conf.example:/etc/alertad.conf
     ports:
       - "8181:80"
     depends_on:

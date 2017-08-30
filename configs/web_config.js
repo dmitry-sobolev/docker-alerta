@@ -2,8 +2,9 @@
 
 angular.module('config', [])
   .constant('config', {
-    'endpoint'    : "/api",
-    'provider'    : "basic",
+    'endpoint'    : "%BASE_URL%",
+    'provider'    : "%AUTH_PROVIDER%",
+    'client_id'   : "%AUTH_CLIENT_ID%",
     'colors'      : {
       'severity': {
         'critical'     : '#D8122A',

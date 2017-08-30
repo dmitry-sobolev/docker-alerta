@@ -9,7 +9,6 @@ RUN set -ex; \
   \
   apk add --no-cache --virtual .run-deps \
     bash \
-    coreutils \
     nginx \
     python \
     git \
@@ -41,18 +40,17 @@ RUN set -ex; \
   \
   apk del .fetch-deps && rm -rf /var/cache/apk/*;
 
-ENV ALERTA_SVR_CONF_FILE /etc/alerta/alertad.conf
-ENV ALERTA_WEB_CONF_FILE $APP_ROOT/config.js
-ENV ALERTA_CONF_FILE /etc/alerta/alerta.conf
+ENV ALERTA_SVR_CONF_FILE "/etc/alerta/alertad.conf"
+ENV ALERTA_WEB_CONF_FILE "$APP_ROOT/config.js"
+ENV ALERTA_CONF_FILE "/etc/alerta/alerta.conf"
 
-ENV BASE_URL /api
-ENV PROVIDER basic
-ENV CLIENT_ID not-set
-ENV CLIENT_SECRET not-set
+ENV BASE_URL "/api"
+ENV AUTH_PROVIDER "basic"
+ENV OAUTH2_CLIENT_ID ""
 
 COPY configs/uwsgi.ini /etc/alerta/uwsgi.ini
-COPY configs/web_config.js $APP_ROOT/config.js
-COPY configs/nginx.conf /etc/nginx/nginx.conf
+COPY configs/web_config.js $APP_ROOT/config.js.source
+COPY configs/nginx.conf /etc/nginx/nginx.conf.source
 COPY configs/supervisor.d/* /etc/supervisor.d/
 
 COPY scripts/* /usr/local/bin/
