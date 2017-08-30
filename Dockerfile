@@ -15,7 +15,8 @@ RUN set -ex; \
     py-pip \
     py-setuptools \
     uwsgi-python \
-    supervisor; \
+    supervisor \
+    openssl; \
   apk add --no-cache --virtual .build-dep \
     musl-dev \
     gcc \
@@ -29,8 +30,7 @@ RUN set -ex; \
 RUN set -ex; \
   \
   apk add --no-cache --virtual .fetch-deps \
-    ca-certificates \
-    openssl; \
+    ca-certificates; \
   wget -q -O - https://github.com/alerta/angular-alerta-webui/tarball/master | tar zxf -; \
   \
   mkdir -p $APP_ROOT; \
