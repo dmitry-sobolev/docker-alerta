@@ -43,6 +43,7 @@ export PLUGINS=${PLUGINS:-reject}
 export AUTH_PROVIDER=${AUTH_PROVIDER:-basic}
 export BASE_URL=${BASE_URL:-/api}
 
+file_env 'OAUTH2_CLIENT_ID' ''
 file_env 'OAUTH2_CLIENT_SECRET' ''
 file_env 'SMTP_PASSWORD' ''
 file_env 'SECRET_KEY' "$(< /dev/urandom tr -dc A-Za-z0-9_\!\@\#\$\%\^\&\*\(\)-+= | head -c 32)"
