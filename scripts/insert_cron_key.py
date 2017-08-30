@@ -20,18 +20,19 @@ def _get_expire_time(exp_years=1):
 
 
 def main():
-    client = MongoClient(MONGODB_URI)
-    db = client.get_database()
+    with MongoClient(MONGODB_URI) as client:
+        db = client.get_database()
 
-    db.keys.insert_one(SON({
-        "user": os.environ.get('ADMIN_USER', 'internal'),
-        "key": os.environ["ADMIN_KEY"],
-        "scopes": ["read", "write", "admin"],
-        "text": "cron jobs",
-        "expireTime": _get_expire_time(),
-        "count": 0,
-        "lastUsedTime": None
-    }))
+        db.keys.insert_one(SON({
+            "user": os.environ.get('ADMIN_USER', 'internal'),
+            "key": os.environ["ADMIN_KEY"],
+            "scopes": ["read", "write", "admin"],
+            "text": "cron jobs",
+            "expireTime": _get_expire_time(),
+            "count": 0,
+            "lastUsedTime": None
+        }))
+    print("Complete!")
 
 
 if __name__ == '__main__':

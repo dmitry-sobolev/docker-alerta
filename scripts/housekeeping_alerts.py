@@ -26,31 +26,33 @@ def main():
             })
         }, False, True)
 
-    client = MongoClient(MONGODB_URI)
-    db = client.get_database()
+    with MongoClient(MONGODB_URI) as client:
+        db = client.get_database()
 
-    now = datetime.datetime.now()
-    two_hrs_ago = now - datetime.timedelta(hours=2)
-    twelve_hrs_ago = now - datetime.timedelta(hours=12)
+        now = datetime.datetime.now()
+        two_hrs_ago = now - datetime.timedelta(hours=2)
+        twelve_hrs_ago = now - datetime.timedelta(hours=12)
 
-    # mark timed out alerts as EXPIRED and update alert history
-    res = db.alerts.aggregate([
-        {'$project': {'event': 1, 'status': 1, 'lastReceiveId': 1, 'timeout': 1,
-                      'expireTime': {'$add': ["$lastReceiveTime", {'$multiply': ["$timeout", 1000]}]}}},
-        {'$match': SON({'status': {'$ne': 'expired'}, 'expireTime': {'$lt': now}, 'timeout': {'$ne': 0}})}
-    ])
-    map(_update_alert, res)
+        # mark timed out alerts as EXPIRED and update alert history
+        res = db.alerts.aggregate([
+            {'$project': {'event': 1, 'status': 1, 'lastReceiveId': 1, 'timeout': 1,
+                          'expireTime': {'$add': ["$lastReceiveTime", {'$multiply': ["$timeout", 1000]}]}}},
+            {'$match': SON({'status': {'$ne': 'expired'}, 'expireTime': {'$lt': now}, 'timeout': {'$ne': 0}})}
+        ])
+        map(_update_alert, res)
 
-    # delete CLOSED or EXPIRED alerts older than 2 hours
-    db.alerts.delete_many({
-        'status': {'$in': ['closed', 'expired']},
-        'lastReceiveTime': SON({'$lt': two_hrs_ago})
-    })
+        # delete CLOSED or EXPIRED alerts older than 2 hours
+        db.alerts.delete_many({
+            'status': {'$in': ['closed', 'expired']},
+            'lastReceiveTime': SON({'$lt': two_hrs_ago})
+        })
 
-    db.alerts.delete_many({
-        'severity': 'informational',
-        'lastReceiveTime': SON({'$lt': twelve_hrs_ago})
-    })
+        db.alerts.delete_many({
+            'severity': 'informational',
+            'lastReceiveTime': SON({'$lt': twelve_hrs_ago})
+        })
+
+    print("Complete")
 
 
 if __name__ == '__main__':

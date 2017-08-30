@@ -37,10 +37,11 @@ _fail() {
     exit 1
 }
 
-export ADMIN_USER=$(echo $ADMIN_USERS | cut -d, -f1)
+export ADMIN_USER=$(echo "$ADMIN_USERS" | cut -d, -f1)
 export ADMIN_KEY=${ADMIN_KEY:-$(openssl rand -base64 32 | cut -c1-40)}
 export PLUGINS=${PLUGINS:-reject}
 export AUTH_PROVIDER=${AUTH_PROVIDER:-basic}
+export BASE_URL=${BASE_URL:-/api}
 
 file_env 'OAUTH2_CLIENT_SECRET' ''
 file_env 'SMTP_PASSWORD' ''
@@ -72,7 +73,7 @@ case "$AUTH_PROVIDER" in
     ;;
 esac
 
-ESC_BASE_URL=$(echo $BASE_URL | sed 's/\//\\\//')
+ESC_BASE_URL=$(echo "$BASE_URL" | sed 's/\//\\\//')
 
 # Config for WebUI
 SOURCE_WEB_IU_CONF="$ALERTA_WEB_CONF_FILE.source"
@@ -89,7 +90,7 @@ cat "$NGINX_SOURCE_CONF" | sed -e "s/%BASE_URL%/${ESC_BASE_URL}/g" > "$NGINX_CON
 echo "$?"
 
 # Generate client config
-cat >/root/alerta.conf << EOF
+cat > "$ALERTA_CONF_FILE" << EOF
 [DEFAULT]
 endpoint = http://localhost${BASE_URL}
 key = ${ADMIN_KEY}
@@ -105,8 +106,8 @@ done
 IFS=$OIFS
 
 # Configure housekeeping and heartbeat alerts
-echo  "* * * * * root MONGODB_URI=$MONGODB_URI MONGO_URI=$MONGO_URI python /usr/local/bin/housekeeping_alerts.py >>/var/log/cron.log 2>&1" >> /etc/crontabs/alerta
-echo  "* * * * * root ALERTA_CONF_FILE=$ALERTA_CONF_FILE /usr/local/bin/alerta heartbeats --alert >>/var/log/cron.log 2>&1" >> /etc/crontabs/alerta
+echo  "* * * * * sh -c 'MONGODB_URI=$MONGODB_URI MONGO_URI=$MONGO_URI python -u /usr/local/bin/housekeeping_alerts.py 2>&1 >> /var/log/cron_tasks.log'" >> /etc/crontabs/root
+echo  "* * * * * sh -c 'ALERTA_CONF_FILE=$ALERTA_CONF_FILE /usr/local/bin/alerta heartbeats --alert 2>&1 >> /var/log/cron_tasks.log'" >> /etc/crontabs/root
 
 if [ -z "$@" ] || [ "${1:0:1}" == "-" ]; then
     set -- supervisord -c "/etc/supervisord.conf" -e "${LOGLEVEL:-INFO}" -j "/var/run/supervisor.pid" -n "$@"
