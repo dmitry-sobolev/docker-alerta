@@ -39,14 +39,21 @@ _fail() {
 
 export ADMIN_USER=$(echo "$ADMIN_USERS" | cut -d, -f1)
 export ADMIN_KEY=${ADMIN_KEY:-$(openssl rand -base64 32 | cut -c1-40)}
-export PLUGINS=${PLUGINS:-reject}
 export AUTH_PROVIDER=${AUTH_PROVIDER:-basic}
 export BASE_URL=${BASE_URL:-/api}
+
+DEFAULT_PLUGINS='reject,telegram,normalise'
+if [ "$PLUGINS" ]; then
+    export PLUGINS=$DEFAULT_PLUGINS
+else
+    export PLUGINS="${DEFAULT_PLUGINS},${PLUGINS}"
+fi
 
 file_env 'OAUTH2_CLIENT_ID' ''
 file_env 'OAUTH2_CLIENT_SECRET' ''
 file_env 'SMTP_PASSWORD' ''
 file_env 'SECRET_KEY' "$(< /dev/urandom tr -dc A-Za-z0-9_\!\@\#\$\%\^\&\*\(\)-+= | head -c 32)"
+file_env 'TELEGRAM_TOKEN'
 
 # Validation of authentication parameters
 case "$AUTH_PROVIDER" in
