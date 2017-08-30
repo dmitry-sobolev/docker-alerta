@@ -109,7 +109,7 @@ echo  "* * * * * root MONGODB_URI=$MONGODB_URI MONGO_URI=$MONGO_URI python /usr/
 echo  "* * * * * root ALERTA_CONF_FILE=$ALERTA_CONF_FILE /usr/local/bin/alerta heartbeats --alert >>/var/log/cron.log 2>&1" >> /etc/crontabs/alerta
 
 if [ -z "$@" ] || [ "${1:0:1}" == "-" ]; then
-    set -- supervisord -c "/etc/supervisord.conf" -e "${LOGLEVEL:-DEBUG}" -j "/var/run/supervisor.pid" -n "$@"
+    set -- supervisord -c "/etc/supervisord.conf" -e "${LOGLEVEL:-INFO}" -j "/var/run/supervisor.pid" -n "$@"
 fi
 
 exec "$@"
