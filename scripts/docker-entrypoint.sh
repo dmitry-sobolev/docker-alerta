@@ -118,7 +118,7 @@ IFS=$OIFS
 
 # Configure housekeeping and heartbeat alerts
 echo  "* * * * * sh -c 'MONGODB_URI=$MONGODB_URI MONGO_URI=$MONGO_URI python -u /usr/local/bin/housekeeping_alerts.py 2>&1 >> /var/log/cron_tasks.log'" >> /etc/crontabs/root
-echo  "* * * * * sh -c 'ALERTA_CONF_FILE=$ALERTA_CONF_FILE /usr/local/bin/alerta heartbeats --alert 2>&1 >> /var/log/cron_tasks.log'" >> /etc/crontabs/root
+echo  "* * * * * sh -c 'ALERTA_CONF_FILE=$ALERTA_CONF_FILE alerta heartbeats --alert 2>&1 >> /var/log/cron_tasks.log'" >> /etc/crontabs/root
 
 if [ -z "$@" ] || [ "${1:0:1}" == "-" ]; then
     set -- supervisord -c "/etc/supervisord.conf" -e "${LOGLEVEL:-INFO}" -j "/var/run/supervisor.pid" -n "$@"
