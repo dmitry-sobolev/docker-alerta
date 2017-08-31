@@ -81,21 +81,24 @@ case "$AUTH_PROVIDER" in
     ;;
 esac
 
-ESC_BASE_URL=$(echo "$BASE_URL" | sed 's/\//\\\//')
+ESC_BASE_URL=$(echo "$BASE_URL" | sed 's/\//\\\//g')
+ESC_GITHUB_URL=$(echo "$GITHUB_URL" | sed 's/\//\\\//g')
+ESC_GITLAB_URL=$(echo "$GITLAB_URL" | sed 's/\//\\\//g')
 
 # Config for WebUI
 SOURCE_WEB_IU_CONF="$ALERTA_WEB_CONF_FILE.source"
 cat "$SOURCE_WEB_IU_CONF" \
     | sed -e "s/%BASE_URL%/${ESC_BASE_URL}/g" \
     | sed -e "s/%AUTH_PROVIDER%/${AUTH_PROVIDER}/g" \
-    | sed -e "s/%OAUTH_CLIENT_ID%/${OAUTH2_CLIENT_ID}/g" \
+    | sed -e "s/%OAUTH2_CLIENT_ID%/${OAUTH2_CLIENT_ID}/g" \
+    | sed -e "s/%GITHUB_URL%/${ESC_GITHUB_URL}/g" \
+    | sed -e "s/%GITLAB_URL%/${ESC_GITLAB_URL}/g" \
     > "$ALERTA_WEB_CONF_FILE"
 
 NGINX_CONF='/etc/nginx/nginx.conf'
 NGINX_SOURCE_CONF="$NGINX_CONF.source"
 
 cat "$NGINX_SOURCE_CONF" | sed -e "s/%BASE_URL%/${ESC_BASE_URL}/g" > "$NGINX_CONF"
-echo "$?"
 
 # Generate client config
 cat > "$ALERTA_CONF_FILE" << EOF

@@ -4,7 +4,9 @@ angular.module('config', [])
   .constant('config', {
     'endpoint'    : "%BASE_URL%",
     'provider'    : "%AUTH_PROVIDER%",
-    'client_id'   : "%AUTH_CLIENT_ID%",
+    'client_id'   : "%OAUTH2_CLIENT_ID%",
+    'github_url'  : "%GITHUB_URL%",
+    'gitlab_url'  : "%GITLAB_URL%",
     'colors'      : {
       'severity': {
         'critical'     : '#D8122A',
