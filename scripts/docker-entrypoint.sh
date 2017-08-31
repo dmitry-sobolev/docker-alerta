@@ -124,4 +124,6 @@ if [ -z "$@" ] || [ "${1:0:1}" == "-" ]; then
     set -- supervisord -c "/etc/supervisord.conf" -e "${LOGLEVEL:-INFO}" -j "/var/run/supervisor.pid" -n "$@"
 fi
 
+insert_cron_key.py
+
 exec "$@"
