@@ -60,7 +60,7 @@ RUN set -ex; \
   mkdir -p /etc/alerta; \
   echo "from alerta.app import app" > /etc/alerta/wsgi.py; \
   chmod +x /usr/local/bin/docker-entrypoint.sh; \
-  chmod +x /usr/local/bin/insert_cron_key.py; \
+  chmod +x /usr/local/bin/alerta_key.py; \
   chmod +x /usr/local/bin/housekeeping_alerts.py; \
   chmod +x /usr/local/bin/supervisor_killer
 

@@ -8,7 +8,15 @@ services:
     depends_on:
       - db
     environment:
-      - MONGO_URI=mongodb://db:27017/monitoring
+      MONGO_URI: mongodb://db:27017/monitoring
+      TELEGRAM_TOKEN: 
+      DASHBOARD_URL: http://localhost
+      ADMIN_USERS: admin
+      AUTH_REQUIRED: 'True'
+      AUTH_PROVIDER: basic
+      CORS_ORIGINS: 'localhost'
+      TELEGRAM_CHAT_ID: 
+      TELEGRAM_WEBHOOK_URL: http://localhost/api/webhooks/telegram
     restart: always
   db:
     image: mongo

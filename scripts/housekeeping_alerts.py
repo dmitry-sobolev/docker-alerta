@@ -1,17 +1,17 @@
 #!/usr/bin/env python
+import argparse
 import os
 import datetime
 
 from pymongo import MongoClient
 from bson import SON
 
-try:
-    MONGODB_URI = os.environ.get('MONGODB_URI', os.environ['MONGO_URI'])
-except KeyError:
-    raise Exception('Either MONGODB_URI or MONGO_URI env variable must be set')
-
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-M', '--mongo-uri', dest='mongo_uri', action='store', required=True)
+    args = parser.parse_args()
+
     def _update_alert(alert):
         db.alerts.update_one({'_id': alert['_id']}, {
             '$set': {'status': 'expired'},
@@ -26,7 +26,7 @@ def main():
             })
         }, False, True)
 
-    with MongoClient(MONGODB_URI) as client:
+    with MongoClient(args.mongo_uri) as client:
         db = client.get_database()
 
         now = datetime.datetime.now()

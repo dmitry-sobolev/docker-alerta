@@ -37,8 +37,9 @@ _fail() {
     exit 1
 }
 
+ADMIN_KEY=$(openssl rand -base64 32 | cut -c1-40)
+
 export ADMIN_USER=$(echo "$ADMIN_USERS" | cut -d, -f1)
-export ADMIN_KEY=${ADMIN_KEY:-$(openssl rand -base64 32 | cut -c1-40)}
 export AUTH_PROVIDER=${AUTH_PROVIDER:-basic}
 export BASE_URL=${BASE_URL:-/api}
 
@@ -47,6 +48,41 @@ if [ "$PLUGINS" ]; then
     export PLUGINS=$DEFAULT_PLUGINS
 else
     export PLUGINS="${DEFAULT_PLUGINS},${PLUGINS}"
+fi
+
+if [ -z "$MONGO_URI" ]; then
+    if [ "$MONGODB_URI" ]; then
+        export MONGO_URI="$MONGODB_URI"
+        unset MONGODB_URI
+    else
+        _fail "Either env variables MONGO_URI or MONGODB_URI must be set!"
+    fi
+fi
+
+export ADMIN_KEY=$(alerta_key.py -M "$MONGO_URI" \
+    -u "$ADMIN_USER" \
+    -s "read" -s "write" -s "admin" \
+    -c "cli" \
+    -t "Admin user for CLI" \
+    --update \
+    "$ADMIN_KEY" \
+)
+
+if [ "$TELEGRAM_WEBHOOK_URL" ]; then
+    IFS='?' read -r TELEGRAM_WEBHOOK_URL old_query <<< "$TELEGRAM_WEBHOOK_URL"
+    TELEGRAM_KEY=$(openssl rand -base64 32 | cut -c1-40)
+    TELEGRAM_KEY=$(alerta_key.py -M "$MONGO_URI" \
+        -u "telegram" \
+        -s "read" -s "write" \
+        -c "telegram" \
+        -t "Telegram webhook" \
+        "$TELEGRAM_KEY" \
+    )
+
+    export TELEGRAM_WEBHOOK_URL="${TELEGRAM_WEBHOOK_URL}?api-key=${TELEGRAM_KEY}"
+
+    unset TELEGRAM_KEY
+    unset old_query
 fi
 
 file_env 'OAUTH2_CLIENT_ID' ''
@@ -117,13 +153,11 @@ done
 IFS=$OIFS
 
 # Configure housekeeping and heartbeat alerts
-echo  "* * * * * sh -c 'MONGODB_URI=$MONGODB_URI MONGO_URI=$MONGO_URI python -u /usr/local/bin/housekeeping_alerts.py 2>&1 >> /var/log/cron_tasks.log'" >> /etc/crontabs/root
-echo  "* * * * * sh -c 'ALERTA_CONF_FILE=$ALERTA_CONF_FILE alerta heartbeats --alert 2>&1 >> /var/log/cron_tasks.log'" >> /etc/crontabs/root
+echo  "* * * * * python -u /usr/local/bin/housekeeping_alerts.py -M '$MONGO_URI' 2>&1 >> /var/log/cron_tasks.log" >> /etc/crontabs/root
+echo  "* * * * * ALERTA_CONF_FILE=$ALERTA_CONF_FILE alerta heartbeats --alert 2>&1 >> /var/log/cron_tasks.log" >> /etc/crontabs/root
 
 if [ -z "$@" ] || [ "${1:0:1}" == "-" ]; then
     set -- supervisord -c "/etc/supervisord.conf" -e "${LOGLEVEL:-INFO}" -j "/var/run/supervisor.pid" -n "$@"
 fi
-
-insert_cron_key.py
 
 exec "$@"
